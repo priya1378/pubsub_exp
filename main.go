@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"context"
+	"encoding/json"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	"github.com/libp2p/go-libp2p"
 	"github.com/libp2p/go-libp2p/p2p/discovery/mdns"
@@ -31,8 +32,17 @@ func main() {
 		panic(err)
 	}
 
-	//ps.Join("hey")
-	
+	topic, err := ps.Join("hey")
+	fmt.Printf("%s and the type is, %T\n", topic, topic)
+	sub, err := topic.Subscribe()
+	fmt.Println("Subscription topic is", sub.Topic())
+	msgBytes, err := json.Marshal("Hey")
+	topic.Publish(ctx, msgBytes)
+	var s string
+	err = json.Unmarshal(msgBytes, &s) //Reference to string must be passed
+	fmt.Println("Decoded data is ", s)
+
+
 	//topic, err := ps.Join("hey")
 	PubSub(ctx, ps, h.ID())
 	if err != nil {
@@ -42,13 +52,14 @@ func main() {
 	
 }
 
-// discoveryNotifee g	ets notified when we find a new peer via mDNS discovery
+// discoveryNotifee gets notified when we find a new peer via mDNS discovery
 type discoveryNotifee struct {
 	h host.Host
 }
 
 func PubSub(ctx context.Context, ps *pubsub.PubSub, selfID peer.ID){
-	topic, err := ps.Join("hey")
+	topic, err := ps.Join("hii")
+	fmt.Println(topic)
 	if err != nil {
 		panic(err)
 	}
@@ -58,11 +69,13 @@ func PubSub(ctx context.Context, ps *pubsub.PubSub, selfID peer.ID){
 	if err!= nil {
 		panic(err)
 	}
+
+	
 	msg, err := sub.Next(ctx)
 	if err!=nil{
 		panic(err)
 	}
-	fmt.Println(msg)
+	fmt.Println("message is", msg)
 }
 
 // HandlePeerFound connects to peers discovered via mDNS. Once they're connected,
